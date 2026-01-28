@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      },
+      "dest": "/api/$1"
+    }
+  ],
+  "env": {
+    "KLAVIYO_PRIVATE_API_KEY": "@klaviyo_private_api_key",
+    "KLAVIYO_PUBLIC_API_KEY": "@klaviyo_public_api_key",
+    "KLAVIYO_NEWSLETTER_LIST_ID": "@klaviyo_newsletter_list_id"
+  }
+}
