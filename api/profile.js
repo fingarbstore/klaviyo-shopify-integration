@@ -54,8 +54,8 @@ async function klaviyoRequest(endpoint, options = {}) {
 
 // Get profile by email
 async function getProfileByEmail(email) {
-  const encodedEmail = encodeURIComponent(email);
-  const filter = `equals(email,"${encodedEmail}")`;
+  // Don't double-encode - just use the email directly in the filter
+  const filter = `equals(email,"${email}")`;
   
   const data = await klaviyoRequest(
     `/profiles/?filter=${encodeURIComponent(filter)}&additional-fields[profile]=subscriptions`
@@ -208,13 +208,45 @@ export default async function handler(req, res) {
   try {
     // GET - Fetch profile
     if (req.method === 'GET') {
-      const { email, shopifyId } = req.query;
+      const { email, shopifyId, debug } = req.query;
 
       if (!email && !shopifyId) {
         return res.status(400).json({
           success: false,
           error: 'Either email or shopifyId query parameter is required'
         });
+      }
+
+      // Debug mode - show what's happening
+      if (debug === 'true') {
+        const filter = `equals(email,"${email}")`;
+        const url = `${KLAVIYO_API_BASE}/profiles/?filter=${encodeURIComponent(filter)}&additional-fields[profile]=subscriptions`;
+        
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Klaviyo-API-Key ${process.env.KLAVIYO_PRIVATE_API_KEY}`,
+              'Accept': 'application/vnd.api+json',
+              'revision': KLAVIYO_API_VERSION
+            }
+          });
+          const rawData = await response.json();
+          
+          return res.status(200).json({
+            debug: true,
+            apiKeySet: !!process.env.KLAVIYO_PRIVATE_API_KEY,
+            apiKeyPrefix: process.env.KLAVIYO_PRIVATE_API_KEY?.substring(0, 6) + '...',
+            filterUsed: filter,
+            urlCalled: url.replace(process.env.KLAVIYO_PRIVATE_API_KEY, '[HIDDEN]'),
+            httpStatus: response.status,
+            rawResponse: rawData
+          });
+        } catch (err) {
+          return res.status(500).json({
+            debug: true,
+            error: err.message
+          });
+        }
       }
 
       let profile;
