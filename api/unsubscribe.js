@@ -18,9 +18,7 @@ async function klaviyoRequest(endpoint, options = {}) {
       revision: KLAVIYO_API_VERSION,
     },
   });
-
   if (response.status === 202 || response.status === 204) return null;
-
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.errors?.[0]?.detail || `Klaviyo error ${response.status}`);
@@ -30,9 +28,7 @@ async function klaviyoRequest(endpoint, options = {}) {
 
 export default async function handler(req, res) {
   corsHeaders(res);
-
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
@@ -69,14 +65,7 @@ export default async function handler(req, res) {
               ],
             },
           },
-          relationships: {
-            list: {
-              data: {
-                type: 'list',
-                id: process.env.KLAVIYO_NEWSLETTER_LIST_ID,
-              },
-            },
-          },
+          // No list relationship — globally unsubscribes the profile
         },
       }),
     });
