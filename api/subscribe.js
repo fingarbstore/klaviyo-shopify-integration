@@ -26,8 +26,7 @@ async function klaviyoRequest(endpoint, options = {}) {
   return data;
 }
 
-async function subscribeProfile({ email, listId, source }) {
-  const newsletterListId = listId || process.env.KLAVIYO_NEWSLETTER_LIST_ID;
+async function subscribeProfile({ email, source }) {
   const payload = {
     data: {
       type: 'profile-subscription-bulk-create-job',
@@ -51,11 +50,6 @@ async function subscribeProfile({ email, listId, source }) {
           ],
         },
       },
-      ...(newsletterListId && {
-        relationships: {
-          list: { data: { type: 'list', id: newsletterListId } },
-        },
-      }),
     },
   };
   return await klaviyoRequest('/profile-subscription-bulk-create-jobs/', {
@@ -73,7 +67,7 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { email, listId, source } = body;
+    const { email, source } = body;
 
     if (!email) {
       return res.status(400).json({ success: false, error: 'Email is required' });
@@ -84,7 +78,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Invalid email format' });
     }
 
-    await subscribeProfile({ email, listId, source });
+    await subscribeProfile({ email, source });
 
     return res.status(200).json({
       success: true,
