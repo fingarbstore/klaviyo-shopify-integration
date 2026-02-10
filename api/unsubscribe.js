@@ -52,7 +52,21 @@ export default async function handler(req, res) {
           type: 'profile-subscription-bulk-delete-job',
           attributes: {
             profiles: {
-              data: [{ type: 'profile', attributes: { email } }],
+              data: [
+                {
+                  type: 'profile',
+                  attributes: {
+                    email,
+                    subscriptions: {
+                      email: {
+                        marketing: {
+                          consent: 'UNSUBSCRIBED',
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
             },
           },
           relationships: {
