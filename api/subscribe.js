@@ -27,6 +27,7 @@ async function klaviyoRequest(endpoint, options = {}) {
 }
 
 async function subscribeProfile({ email, source }) {
+  const newsletterListId = process.env.KLAVIYO_NEWSLETTER_LIST_ID;
   const payload = {
     data: {
       type: 'profile-subscription-bulk-create-job',
@@ -50,6 +51,11 @@ async function subscribeProfile({ email, source }) {
           ],
         },
       },
+      ...(newsletterListId && {
+        relationships: {
+          list: { data: { type: 'list', id: newsletterListId } },
+        },
+      }),
     },
   };
   return await klaviyoRequest('/profile-subscription-bulk-create-jobs/', {
