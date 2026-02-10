@@ -44,6 +44,13 @@ async function subscribeProfile({ email, firstName, lastName, shopifyId, listId,
                 email,
                 ...(firstName && { first_name: firstName }),
                 ...(lastName && { last_name: lastName }),
+                subscriptions: {
+                  email: {
+                    marketing: {
+                      consent: 'SUBSCRIBED',
+                    },
+                  },
+                },
                 ...(shopifyId && {
                   properties: { shopify_customer_id: shopifyId },
                 }),
