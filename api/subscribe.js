@@ -18,9 +18,7 @@ async function klaviyoRequest(endpoint, options = {}) {
       revision: KLAVIYO_API_VERSION,
     },
   });
-
   if (response.status === 202 || response.status === 204) return null;
-
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.errors?.[0]?.detail || `Klaviyo error ${response.status}`);
@@ -28,9 +26,8 @@ async function klaviyoRequest(endpoint, options = {}) {
   return data;
 }
 
-async function subscribeProfile({ email, firstName, lastName, shopifyId, listId, source }) {
+async function subscribeProfile({ email, listId, source }) {
   const newsletterListId = listId || process.env.KLAVIYO_NEWSLETTER_LIST_ID;
-
   const payload = {
     data: {
       type: 'profile-subscription-bulk-create-job',
@@ -42,8 +39,6 @@ async function subscribeProfile({ email, firstName, lastName, shopifyId, listId,
               type: 'profile',
               attributes: {
                 email,
-                ...(firstName && { first_name: firstName }),
-                ...(lastName && { last_name: lastName }),
                 subscriptions: {
                   email: {
                     marketing: {
@@ -51,9 +46,6 @@ async function subscribeProfile({ email, firstName, lastName, shopifyId, listId,
                     },
                   },
                 },
-                ...(shopifyId && {
-                  properties: { shopify_customer_id: shopifyId },
-                }),
               },
             },
           ],
@@ -66,7 +58,6 @@ async function subscribeProfile({ email, firstName, lastName, shopifyId, listId,
       }),
     },
   };
-
   return await klaviyoRequest('/profile-subscription-bulk-create-jobs/', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -75,16 +66,14 @@ async function subscribeProfile({ email, firstName, lastName, shopifyId, listId,
 
 export default async function handler(req, res) {
   corsHeaders(res);
-
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { email, firstName, lastName, shopifyId, listId, source } = body;
+    const { email, listId, source } = body;
 
     if (!email) {
       return res.status(400).json({ success: false, error: 'Email is required' });
@@ -95,7 +84,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Invalid email format' });
     }
 
-    await subscribeProfile({ email, firstName, lastName, shopifyId, listId, source });
+    await subscribeProfile({ email, listId, source });
 
     return res.status(200).json({
       success: true,
